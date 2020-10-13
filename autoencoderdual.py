@@ -41,6 +41,7 @@ class Autoencoder:
         self.y_sz = y_sz
         self.AE_m2m = []
         self.AE_m2z = []
+        self.AE_m2z_reg = []
         self.AE_z2m = []
         self.variational = variational
         self.z_dim = z_dim
@@ -171,6 +172,18 @@ class Autoencoder:
             #write to folder for every 10th epoch for monitoring
             figs = util.plotAllLosses(AE_reg, AE)
             figs.savefig('Dual_Losses.png')
+        
+        #set the encoder model
+        self.AE_m2z_reg = Model(input_image_reg, encoded_image_reg)
+        self.AE_m2z = Model(input_image, encoded_image)
+
+        #set the decoder model
+        zm_dec = Input(shape=(self.z_dim, )) 
+        _ = self.AE_m2m.layers[14](zm_dec)
+        for i in range(15, 27):
+            _ = self.AE_m2m.layers[i](_)
+        decoded_image_ = self.AE_m2m.layers[27](_)
+        self.AE_z2m = Model(zm_dec, decoded_image_)
         
     def train_autoencoder2D(self, x_train_reg, x_train, load = False):
         #set loss function, optimizer and compile
